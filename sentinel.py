@@ -360,6 +360,8 @@ if __name__ == '__main__':
                       help="size of camera buffer. Default: 2", metavar="SIZE")
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False,
                       help="detailed output, including timing information")
+    parser.add_option("-U", "--USB", action="store_true", dest="USBturret", default=False,
+                      help="configure for using USB-connected turret")
     opts, args = parser.parse_args()
     print opts
 
@@ -367,8 +369,10 @@ if __name__ == '__main__':
     opts = AttributeDict(vars(opts))  # converting opts to an AttributeDict so we can add extra options
     opts.haar_file = 'haarcascade_frontalface_default.xml'
     opts.processed_img_file = 'capture_faces.jpg'
+    
+    if opts.USBturret: turret = Turret(opts)
+    else: turret = False
 
-    turret = Turret(opts)
     camera = Camera(opts)
 
     if not opts.reset_only:
@@ -388,7 +392,7 @@ if __name__ == '__main__':
                 if face_detected:
                     if opts.verbose:
                         print "adjusting turret: x=" + str(x_adj) + ", y=" + str(y_adj)
-                    turret.adjust(x_adj, y_adj)
+                    if turret: turret.adjust(x_adj, y_adj)
                 movement_time = time.time()
 
                 if opts.verbose:
@@ -396,9 +400,9 @@ if __name__ == '__main__':
                     print "detection time: " + str(detection_time - capture_time)
                     print "movement time: " + str(movement_time - detection_time)
 
-                turret.ready_aim_fire(x_adj, y_adj, face_y_size, camera)
+                if turret: turret.ready_aim_fire(x_adj, y_adj, face_y_size, camera)
 
             except KeyboardInterrupt:
-                turret.dispose()
+                if turret: turret.dispose()
                 camera.dispose()
                 break
